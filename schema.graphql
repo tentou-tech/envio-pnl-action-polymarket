@@ -1,0 +1,60 @@
+# Neg Risk Events/Markets
+type NegRiskEvent @entity {
+  "negRiskMarketId"
+  id: ID!
+  "Question Count"
+  questionCount: Int!
+}
+
+type Condition @entity {
+  "conditionId"
+  id: ID!
+  "tokenIds"
+  positionIds: [BigInt!]!
+  "payouts"
+  payoutNumerators: [BigInt!]!
+  payoutDenominator: BigInt!
+  "is this a neg risk condition?"
+  negRisk: Boolean!
+}
+
+type FPMM @entity {
+  "FPMM address"
+  id: ID!
+  "conditionId"
+  conditionId: String!
+}
+
+type Position @entity {
+  "tokenId"
+  id: ID!
+  "conditionId"
+  conditionId: String!
+}
+
+type PositionAction @entity {
+  "ID = txHash + logIndex"
+  id: ID!
+  "User Address"
+  user: String!
+  "Token ID"
+  tokenId: BigInt!
+  "Type: Buy, Sell, Split, Merge, Redeem, Convert"
+  actionType: String!
+  "Amount of tokens"
+  amount: BigInt!
+  "Price at which the action occurred"
+  price: BigInt!
+  "Timestamp of the action"
+  timestamp: BigInt!
+  "Block number of the action"
+  block: BigInt! @index
+  "Transaction Hash"
+  transactionHash: String!
+  "Log Index inside the block"
+  logIndex: BigInt!
+  "Source of the action"
+  source: String
+  "Index if multiple actions in the same log index"
+  index: BigInt!
+}
