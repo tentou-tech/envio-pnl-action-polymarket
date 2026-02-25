@@ -1,4 +1,4 @@
-import { keccak256, getBytes, hexlify, toBigInt } from "ethers";
+import { keccak256, getBytes, toBigInt } from "ethers";
 
 const P = 21888242871839275222246405745257275088696311157297823662689037894645226208583n;
 const B = 3n;
@@ -41,11 +41,10 @@ export const computeCollectionId = (
   hashPayload[63] = indexSetVal;
 
   const hashResultHex = keccak256(hashPayload);
-  const hashResultBytes = getBytes(hashResultHex);
-
-  // reverse
-  hashResultBytes.reverse();
-  const hashBigInt = toBigInt(hexlify(hashResultBytes));
+  // ethers toBigInt reads hex as big-endian (unlike AssemblyScript's
+  // BigInt.fromUnsignedBytes which needs little-endian, hence the original
+  // subgraph reverses here — but we must NOT reverse for ethers)
+  const hashBigInt = toBigInt(hashResultHex);
 
   const odd = (hashBigInt >> 255n) !== 0n;
 
@@ -91,8 +90,6 @@ export const computePositionId = (
   hashPayload.set(collectionIdBytes, 20);
 
   const hashHex = keccak256(hashPayload);
-  const hashBytes = getBytes(hashHex);
-  hashBytes.reverse();
-
-  return toBigInt(hexlify(hashBytes));
+  // No reversal — ethers toBigInt reads hex as big-endian
+  return toBigInt(hashHex);
 };
