@@ -1,4 +1,4 @@
-import { Exchange, NegRiskExchange } from 'generated';
+import { Exchange, ExchangeV2, NegRiskExchange, NegRiskExchangeV2 } from 'generated';
 
 import { COLLATERAL_SCALE } from './utils/constants';
 
@@ -7,13 +7,14 @@ import * as MappingHelpers from './utils/mapping-helpers';
 // --- Exchange ---
 
 const handleOrderFilled = async (event: any, context: any) => {
-  // makerAssetId = 0 -> BUY (takerAssetId is Position)
-  // makerAssetId != 0 -> SELL (makerAssetId is Position)
+  // V1 OrderFilled: BUY/SELL inferred from makerAssetId/takerAssetId.
+  // V2 OrderFilled: explicit `side` (0=BUY, 1=SELL) and a single `tokenId`.
+  const isV2 = event.params.side !== undefined;
 
-  const makerAssetId = event.params.makerAssetId;
-  const isBuy = makerAssetId === 0n;
+  const isBuy = isV2
+    ? event.params.side === 0
+    : event.params.makerAssetId === 0n;
 
-  // parseOrderFilled logic
   const account = event.params.maker;
   const baseAmount = isBuy
     ? event.params.takerAmountFilled
@@ -21,9 +22,11 @@ const handleOrderFilled = async (event: any, context: any) => {
   const quoteAmount = isBuy
     ? event.params.makerAmountFilled
     : event.params.takerAmountFilled;
-  const positionId = isBuy
-    ? event.params.takerAssetId
-    : event.params.makerAssetId;
+  const positionId = isV2
+    ? event.params.tokenId
+    : isBuy
+      ? event.params.takerAssetId
+      : event.params.makerAssetId;
 
   const price = (quoteAmount * COLLATERAL_SCALE) / baseAmount;
 
@@ -71,5 +74,13 @@ Exchange.OrderFilled.handler(async ({ event, context }) => {
 });
 
 NegRiskExchange.OrderFilled.handler(async ({ event, context }) => {
+  await handleOrderFilled(event, context);
+});
+
+ExchangeV2.OrderFilled.handler(async ({ event, context }) => {
+  await handleOrderFilled(event, context);
+});
+
+NegRiskExchangeV2.OrderFilled.handler(async ({ event, context }) => {
   await handleOrderFilled(event, context);
 });
