@@ -12,7 +12,7 @@ const handleOrderFilled = async (event: any, context: any) => {
   const isV2 = event.params.side !== undefined;
 
   const isBuy = isV2
-    ? event.params.side === 0
+    ? event.params.side === 0n
     : event.params.makerAssetId === 0n;
 
   const account = event.params.maker;
